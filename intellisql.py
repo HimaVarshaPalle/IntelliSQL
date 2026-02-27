@@ -2,17 +2,12 @@ import sqlite3
 from google import genai
 from datetime import datetime
 
-# ── Configure Gemini ──────────────────────────────────────────────────────────
-client = genai.Client(api_key="AIzaSyD-iAWrcKTKfXJ49DSV07UMEL5wDLNX0K8")  # ← paste your key here
+client = genai.Client(api_key="AIzaSyD-iAWrcKTKfXJ49DSV07UMEL5wDLNX0K8")  
 
-# ── Connect to database ───────────────────────────────────────────────────────
 conn   = sqlite3.connect("sales.db")
 cursor = conn.cursor()
 
-# ── Query history ─────────────────────────────────────────────────────────────
-history = []   # each entry: { question, sql, rows, columns, time }
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
+history = []  
 
 def divider(char="─", width=64):
     print(char * width)
@@ -33,13 +28,11 @@ def print_table(columns, rows):
         print("  (no rows returned)")
         return
 
-    # Calculate column widths
     col_widths = [len(str(c)) for c in columns]
     for row in rows:
         for i, val in enumerate(row):
             col_widths[i] = max(col_widths[i], len(str(val)))
 
-    # Build format string
     row_fmt  = "  │ " + " │ ".join(f"{{:<{w}}}" for w in col_widths) + " │"
     sep_line = "  ├─" + "─┼─".join("─" * w for w in col_widths) + "─┤"
     top_line = "  ┌─" + "─┬─".join("─" * w for w in col_widths) + "─┐"
@@ -58,7 +51,7 @@ def print_history():
         print("  No queries yet.\n")
         return
     divider()
-    print("  📋  QUERY HISTORY")
+    print("QUERY HISTORY")
     divider()
     for i, entry in enumerate(history, 1):
         print(f"  [{i}] {entry['time']}  →  {entry['question']}")
@@ -85,7 +78,6 @@ def generate_sql(question):
     )
     sql = response.text.strip()
 
-    # Strip markdown fences if present
     if sql.startswith("```"):
         lines = sql.splitlines()
         sql   = "\n".join(lines[1:-1]).strip()
@@ -97,8 +89,6 @@ def run_query(sql):
     columns = [desc[0] for desc in cursor.description] if cursor.description else []
     rows    = cursor.fetchall()
     return columns, rows
-
-# ── Main loop ─────────────────────────────────────────────────────────────────
 
 print_banner()
 
@@ -112,7 +102,6 @@ while True:
     if not question:
         continue
 
-    # ── Built-in commands ──
     if question.lower() == "exit":
         print("\n  Goodbye!")
         break
@@ -126,8 +115,7 @@ while True:
         print("  History cleared.\n")
         continue
 
-    # ── Generate SQL ──
-    print("\n  ⏳ Thinking...", end="\r")
+    print("\nThinking...", end="\r")
     try:
         sql_query = generate_sql(question)
     except Exception as e:
@@ -137,12 +125,10 @@ while True:
     print(f"  ✓ Generated SQL:")
     print(f"    {sql_query}\n")
 
-    # ── Execute SQL ──
     try:
         columns, results = run_query(sql_query)
         print_table(columns, results)
 
-        # Save to history
         history.append({
             "question": question,
             "sql":      sql_query,
