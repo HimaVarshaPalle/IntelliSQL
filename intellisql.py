@@ -2,7 +2,7 @@ import sqlite3
 from google import genai
 from datetime import datetime
 
-client = genai.Client(api_key="AIzaSyD-iAWrcKTKfXJ49DSV07UMEL5wDLNX0K8")  
+client = genai.Client(api_key="YOUR API KEY")  
 
 conn   = sqlite3.connect("sales.db")
 cursor = conn.cursor()
